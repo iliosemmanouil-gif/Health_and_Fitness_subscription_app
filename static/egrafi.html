@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <title>Εγγραφή Πελάτη</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url("/static/eikona.png") no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    input {
+      padding: 10px;
+      width: 100%;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .btn-1 { background: #4caf50; }
+    .btn-3 { background: #2196f3; }
+    .btn-6 { background: #ff9800; }
+
+    #message { margin-top: 20px; font-weight: bold; }
+
+/* Κάρτα Μέλους */
+#card {
+  display: none;
+  position: relative;
+  margin-top: 20px;
+  width: 350px;
+  height: 500px;
+  border-radius: 15px;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+  background: url("/static/eikona.png") no-repeat center center;
+  background-size: cover;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Σκούρα επικάλυψη για να φαίνεται καθαρά το κείμενο */
+#card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 15px;
+}
+
+/* Κείμενα */
+#card h2,
+#card p {
+  position: relative;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  margin: 15px 25px;
+  padding: 10px;
+  text-shadow: 2px 2px 4px black;
+  color: #fff;
+}
+
+#card h2 {
+  font-size: 26px;
+  margin-top: 25px;
+}
+
+#card p {
+  font-size: 18px;
+}
+
+
+    #download-btn {
+      display: none;
+      margin-top: 15px;
+      background: #333;
+      color: white;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Εγγραφή Πελάτη</h1>
+    <input type="text" id="name" placeholder="Ονοματεπώνυμο">
+
+    <div>
+      <button class="btn-1" onclick="sendData(1)">1 Μήνας</button>
+      <button class="btn-3" onclick="sendData(3)">3 Μήνες</button>
+      <button class="btn-6" onclick="sendData(6)">6 Μήνες</button>
+    </div>
+
+    <p id="message"></p>
+
+    <!-- Κάρτα -->
+    <div id="card">
+      <h2>Κάρτα Μέλους</h2>
+      <p><strong>Όνομα:</strong> <span id="c-name"></span></p>
+      <p><strong>Έναρξη:</strong> <span id="c-start"></span></p>
+      <p><strong>Λήξη:</strong> <span id="c-end"></span></p>
+    </div>
+
+    <button id="download-btn" onclick="downloadCard()">Κατέβασε</button>
+  </div>
+
+  <script>
+    async function sendData(months) {
+      const name = document.getElementById("name").value.trim();
+      const messageEl = document.getElementById("message");
+
+      if (!name) {
+        messageEl.innerText = "Παρακαλώ συμπληρώστε το ονοματεπώνυμο!";
+        messageEl.style.color = "red";
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/add_pelatis", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, months: months })
+        });
+
+        const result = await response.json();
+
+        if (result.pelatis) {
+          messageEl.innerText = result.message;
+          messageEl.style.color = "green";
+
+          // Γέμισμα κάρτας
+          document.getElementById("c-name").innerText = result.pelatis.name;
+          document.getElementById("c-start").innerText = result.pelatis.startDate;
+          document.getElementById("c-end").innerText = result.pelatis.endDate;
+
+          // Εμφάνιση κάρτας και κουμπιού
+          document.getElementById("card").style.display = "block";
+          document.getElementById("download-btn").style.display = "inline-block";
+        } else {
+          messageEl.innerText = result.message;
+          messageEl.style.color = "red";
+        }
+      } catch (err) {
+        messageEl.innerText = "Σφάλμα κατά την αποστολή!";
+        messageEl.style.color = "red";
+      }
+    }
+
+    function downloadCard() {
+      const card = document.getElementById("card");
+      html2canvas(card).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "karta_melous.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>

@@ -40,6 +40,16 @@
     .edit { background: #4caf50; color: white; }
     .delete { background: #f44336; color: white; }
     .save { background: #2196f3; color: white; }
+    
+    .approve {
+  background: #2e7d32;
+  color: white;
+}
+
+.reject {
+  background: #c62828;
+  color: white;
+}
   </style>
 </head>
 <body>
@@ -76,6 +86,10 @@
             <td>
               <button class="edit">Edit</button>
               <button class="delete">Delete</button>
+            </td>
+            <td>
+             <button class="approve" onclick="approve(${pelatis.id})">Αποδοχή</button>
+            <button class="reject" onclick="reject(${pelatis.id})">Απόρριψη</button>
             </td>
           `;
           tbody.appendChild(row);
@@ -144,6 +158,17 @@
         console.error("Σφάλμα φόρτωσης πελατών:", err);
         alert("Δεν ήταν δυνατή η φόρτωση των δεδομένων.");
       });
+    // --- Αποδοχή ή Απόρριψη ---
+function approve(id) {
+  fetch(`/api/approve/${id}`, { method: "POST" })
+    .then(() => location.reload());
+}
+
+function reject(id) {
+  fetch(`/api/reject/${id}`, { method: "POST" })
+    .then(() => location.reload());
+}
   </script>
 </body>
 </html>
+

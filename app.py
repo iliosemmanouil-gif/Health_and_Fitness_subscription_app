@@ -77,6 +77,28 @@ def delete_pelatis(name):
 
     save_data(new_list)
     return jsonify({"message": f"Ο πελάτης '{name}' διαγράφηκε!"})
+    
+@app.route("/api/approve/<int:pid>", methods=["POST"])
+def approve_pelatis(pid):
+    pelates = load_data()
+
+    for p in pelates:
+        if p.get("id") == pid:
+            p["status"] = "approved"
+
+    save_data(pelates)
+    return jsonify({"message": "Ο πελάτης εγκρίθηκε"})
+    
+@app.route("/api/reject/<int:pid>", methods=["POST"])
+def reject_pelatis(pid):
+    pelates = load_data()
+
+    for p in pelates:
+        if p.get("id") == pid:
+            p["status"] = "rejected"
+
+    save_data(pelates)
+    return jsonify({"message": "Ο πελάτης απορρίφθηκε"})
 
 # ---------------- HTML Σελίδες ----------------
 @app.route("/")
@@ -90,7 +112,10 @@ def egrafi_page():
 @app.route("/listapelaton")
 def listapelaton_page():
     return send_from_directory("static", "listapelaton.html")
+    
+
 
 # ---------------- Εκκίνηση για Render ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+

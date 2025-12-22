@@ -38,12 +38,9 @@ def add_pelatis():
     end_date = start_date + timedelta(days=30 * months)
 
     pelatis = {
-          "id": len(pelates) + 1,
-          "name": name,
-          "months": months,
-          "startDate": start_date.strftime("%d/%m/%Y"),
-          "endDate": end_date.strftime("%d/%m/%Y"),
-          "status": "pending"   
+        "name": name,
+        "startDate": start_date.strftime("%d/%m/%Y"),
+        "endDate": end_date.strftime("%d/%m/%Y")
     }
 
     pelates = load_data()
@@ -54,10 +51,7 @@ def add_pelatis():
 
 @app.route("/api/pelatais", methods=["GET"])
 def get_pelatais():
-    pelates = load_data()
-    pending = [p for p in pelates if p.get("status") == "pending"]
-    return jsonify(pending)
-
+    return jsonify(load_data())
 
 @app.route("/api/pelatis/<string:name>", methods=["PUT"])
 def update_pelatis(name):
@@ -84,29 +78,6 @@ def delete_pelatis(name):
     save_data(new_list)
     return jsonify({"message": f"Ο πελάτης '{name}' διαγράφηκε!"})
 
-@app.route("/api/approve/<int:pid>", methods=["POST"])
-def approve_pelatis(pid):
-    pelates = load_data()
-
-    for p in pelates:
-        if p.get("id") == pid:
-            p["status"] = "approved"
-
-    save_data(pelates)
-    return jsonify({"message": "Ο πελάτης εγκρίθηκε"})
-
-
-@app.route("/api/reject/<int:pid>", methods=["POST"])
-def reject_pelatis(pid):
-    pelates = load_data()
-
-    for p in pelates:
-        if p.get("id") == pid:
-            p["status"] = "rejected"
-
-    save_data(pelates)
-    return jsonify({"message": "Ο πελάτης απορρίφθηκε"})
-
 # ---------------- HTML Σελίδες ----------------
 @app.route("/")
 def index():
@@ -122,5 +93,4 @@ def listapelaton_page():
 
 # ---------------- Εκκίνηση για Render ----------------
 if __name__ == "__main__":
-
     app.run(host="0.0.0.0", port=5000)

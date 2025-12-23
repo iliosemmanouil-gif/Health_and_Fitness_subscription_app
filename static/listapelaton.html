@@ -1,66 +1,150 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="el">
 <head>
-<meta charset="UTF-8">
-<title>Λίστα Πελατών</title>
-
-<style>
-body { font-family: Arial; }
-table { width: 80%; margin: auto; border-collapse: collapse; }
-th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-.approve { background: green; color: white; }
-.reject { background: red; color: white; }
-</style>
+  <meta charset="UTF-8">
+  <title>Λίστα Πελατών</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #search-bar {
+      display: block;
+      margin: 20px auto;
+      padding: 10px;
+      width: 50%;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: auto;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    button {
+      padding: 5px 10px;
+      margin: 2px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .edit { background: #4caf50; color: white; }
+    .delete { background: #f44336; color: white; }
+    .save { background: #2196f3; color: white; }
+  </style>
 </head>
-
 <body>
-<h2 style="text-align:center;">Αιτήσεις Πελατών</h2>
+  <h1>Λίστα Πελατών</h1>
 
-<table>
-<thead>
-<tr>
-  <th>Όνομα</th>
-  <th>Κατάσταση</th>
-  <th>Ενέργεια</th>
-</tr>
-</thead>
-<tbody id="rows"></tbody>
-</table>
+  <!-- 🔎 Μπάρα Αναζήτησης -->
+  <input type="text" id="search-bar" placeholder="Αναζήτηση με ονοματεπώνυμο...">
 
-<script>
-fetch("/api/pelatais")
-.then(res => res.json())
-.then(data => {
-  const rows = document.getElementById("rows");
+  <table id="pelates-table">
+    <thead>
+      <tr>
+        <th>Ημερομηνία Έναρξης</th>
+        <th>Ονοματεπώνυμο</th>
+        <th>Ημερομηνία Λήξης</th>
+        <th>Ενέργειες</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  data.forEach(p => {
-    if (p.status !== "pending") return;
+  <script>
+    // --- Φόρτωση λίστας ---
+    fetch("/api/pelatais")
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#pelates-table tbody");
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${p.name}</td>
-      <td>Αναμονή</td>
-      <td>
-        <button class="approve" onclick="approve('${p.name}')">Αποδοχή</button>
-        <button class="reject" onclick="reject('${p.name}')">Απόρριψη</button>
-      </td>
-    `;
-    rows.appendChild(tr);
-  });
-});
+        data.forEach(pelatis => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${pelatis.startDate}</td>
+            <td contenteditable="false">${pelatis.name}</td>
+            <td contenteditable="false">${pelatis.endDate}</td>
+            <td>
+              <button class="edit">Edit</button>
+              <button class="delete">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
 
-function approve(name) {
-  if (!confirm("Να εγκριθεί ο πελάτης;")) return;
-  fetch("/api/approve/" + encodeURIComponent(name), { method: "POST" })
-    .then(() => location.reload());
-}
+          const editBtn = row.querySelector(".edit");
+          const deleteBtn = row.querySelector(".delete");
+          const nameCell = row.cells[1];
+          const endDateCell = row.cells[2];
 
-function reject(name) {
-  if (!confirm("Να απορριφθεί ο πελάτης;")) return;
-  fetch("/api/reject/" + encodeURIComponent(name), { method: "POST" })
-    .then(() => location.reload());
-}
-</script>
+          // --- Edit/Save ---
+          editBtn.addEventListener("click", () => {
+            const isEditing = editBtn.textContent === "Save";
+            const originalName = pelatis.name;
+
+            if (!isEditing) {
+              nameCell.contentEditable = "true";
+              endDateCell.contentEditable = "true";
+              editBtn.textContent = "Save";
+              editBtn.className = "save";
+            } else {
+              fetch(`/api/pelatis/${encodeURIComponent(originalName)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: nameCell.innerText,
+                  endDate: endDateCell.innerText
+                })
+              })
+              .then(res => res.json())
+              .then(result => alert(result.message))
+              .catch(err => alert("Σφάλμα ενημέρωσης: " + err));
+
+              nameCell.contentEditable = "false";
+              endDateCell.contentEditable = "false";
+              editBtn.textContent = "Edit";
+              editBtn.className = "edit";
+            }
+          });
+
+          // --- Delete ---
+          deleteBtn.addEventListener("click", () => {
+            if (confirm(`Να διαγραφεί ο πελάτης "${pelatis.name}" ;`)) {
+              fetch(`/api/pelatis/${encodeURIComponent(pelatis.name)}`, { method: "DELETE" })
+                .then(res => res.json())
+                .then(result => {
+                  alert(result.message);
+                  row.remove();
+                })
+                .catch(err => alert("Σφάλμα διαγραφής: " + err));
+            }
+          });
+        });
+
+        // --- Αναζήτηση ---
+        const searchBar = document.getElementById("search-bar");
+        searchBar.addEventListener("keyup", () => {
+          const filter = searchBar.value.toLowerCase();
+          const rows = tbody.getElementsByTagName("tr");
+          for (let r of rows) {
+            const name = r.cells[1].innerText.toLowerCase();
+            r.style.display = name.includes(filter) ? "" : "none";
+          }
+        });
+      })
+      .catch(err => {
+        console.error("Σφάλμα φόρτωσης πελατών:", err);
+        alert("Δεν ήταν δυνατή η φόρτωση των δεδομένων.");
+      });
+  </script>
 </body>
 </html>
 

@@ -62,6 +62,28 @@ def approve(name):
     save_data(pelates)
     return jsonify({"message": "Εγκρίθηκε"})
 
+@app.route("/card/<string:name>")
+def card(name):
+    pelates = load_data()
+    for p in pelates:
+        if p["name"] == name and p["status"] == "approved":
+            return f"""
+            <h2>Ψηφιακή Κάρτα</h2>
+            <p>Όνομα: {p['name']}</p>
+            <p>Έναρξη: {p['startDate']}</p>
+            <p>Λήξη: {p['endDate']}</p>
+            """
+    return "Δεν υπάρχει ενεργή συνδρομή"
+    
+function approve(name) {
+  fetch("/api/approve/" + encodeURIComponent(name), { method: "POST" })
+    .then(() => {
+      alert("Ο πελάτης εγκρίθηκε");
+      window.open("/card/" + encodeURIComponent(name));
+      location.reload();
+    });
+}
+
 # ---------------- ΑΠΟΡΡΙΨΗ ----------------
 @app.route("/api/reject/<string:name>", methods=["POST"])
 def reject(name):
@@ -85,4 +107,5 @@ def listapelaton():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 

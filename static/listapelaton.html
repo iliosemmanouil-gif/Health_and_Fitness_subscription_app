@@ -76,6 +76,8 @@
             <td>
               <button class="edit">Edit</button>
               <button class="delete">Delete</button>
+              <button onclick="approve('${pelatis.name}')">Αποδοχή</button>
+              <button onclick="reject('${pelatis.name}')">Απόρριψη</button>
             </td>
           `;
           tbody.appendChild(row);
@@ -144,8 +146,24 @@
         console.error("Σφάλμα φόρτωσης πελατών:", err);
         alert("Δεν ήταν δυνατή η φόρτωση των δεδομένων.");
       });
+    function approve(name) {
+  if (!confirm("Να εγκριθεί ο πελάτης;")) return;
+
+  fetch("/api/approve/" + encodeURIComponent(name), {
+    method: "POST"
+  }).then(() => location.reload());
+}
+
+function reject(name) {
+  if (!confirm("Να απορριφθεί ο πελάτης;")) return;
+
+  fetch("/api/reject/" + encodeURIComponent(name), {
+    method: "POST"
+  }).then(() => location.reload());
+}
   </script>
 </body>
 </html>
+
 
 

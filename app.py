@@ -16,7 +16,7 @@ def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# ---------------- Εγγραφή (PENDING) ----------------
+# ---------------- ΕΓΓΡΑΦΗ (PENDING) ----------------
 @app.route("/api/add_pelatis", methods=["POST"])
 def add_pelatis():
     data = request.json
@@ -39,9 +39,9 @@ def add_pelatis():
     pelates.append(pelatis)
     save_data(pelates)
 
-    return jsonify({"message": "Η αίτηση καταχωρήθηκε (σε αναμονή)"})
+    return jsonify({"message": "Η αίτηση καταχωρήθηκε και περιμένει έγκριση"})
 
-# ---------------- Λίστα ----------------
+# ---------------- ΛΙΣΤΑ ----------------
 @app.route("/api/pelatais", methods=["GET"])
 def get_pelatais():
     return jsonify(load_data())
@@ -62,6 +62,15 @@ def approve(name):
     save_data(pelates)
     return jsonify({"message": "Εγκρίθηκε"})
 
+# ---------------- ΑΠΟΡΡΙΨΗ ----------------
+@app.route("/api/reject/<string:name>", methods=["POST"])
+def reject(name):
+    pelates = load_data()
+    pelates = [p for p in pelates if p["name"] != name]
+    save_data(pelates)
+    return jsonify({"message": "Απορρίφθηκε"})
+
+# ---------------- ΚΑΡΤΑ ----------------
 @app.route("/card/<string:name>")
 def card(name):
     pelates = load_data()
@@ -74,25 +83,8 @@ def card(name):
             <p>Λήξη: {p['endDate']}</p>
             """
     return "Δεν υπάρχει ενεργή συνδρομή"
-    
-function approve(name) {
-  fetch("/api/approve/" + encodeURIComponent(name), { method: "POST" })
-    .then(() => {
-      alert("Ο πελάτης εγκρίθηκε");
-      window.open("/card/" + encodeURIComponent(name));
-      location.reload();
-    });
-}
 
-# ---------------- ΑΠΟΡΡΙΨΗ ----------------
-@app.route("/api/reject/<string:name>", methods=["POST"])
-def reject(name):
-    pelates = load_data()
-    pelates = [p for p in pelates if p["name"] != name]
-    save_data(pelates)
-    return jsonify({"message": "Απορρίφθηκε"})
-
-# ---------------- Σελίδες ----------------
+# ---------------- ΣΕΛΙΔΕΣ ----------------
 @app.route("/")
 def index():
     return send_from_directory("static", "listapelaton.html")
@@ -107,5 +99,7 @@ def listapelaton():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
+
 
 

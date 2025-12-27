@@ -136,6 +136,7 @@
   </div>
 
   <script>
+      let waitingForApproval = false;
     async function sendData(months) {
       const name = document.getElementById("name").value.trim();
       const messageEl = document.getElementById("message");
@@ -155,18 +156,10 @@
 
         const result = await response.json();
 
-        if (result.pelatis) {
-          messageEl.innerText = result.message;
-          messageEl.style.color = "green";
-
-          // Γέμισμα κάρτας
-          document.getElementById("c-name").innerText = result.pelatis.name;
-          document.getElementById("c-start").innerText = result.pelatis.startDate;
-          document.getElementById("c-end").innerText = result.pelatis.endDate;
-
-          // Εμφάνιση κάρτας και κουμπιού
-          document.getElementById("card").style.display = "block";
-          document.getElementById("download-btn").style.display = "inline-block";
+         messageEl.innerText = "Η αίτηση καταχωρήθηκε και περιμένει έγκριση";
+         messageEl.style.color = "red";
+         waitingForApproval = true;
+        
         } else {
           messageEl.innerText = result.message;
           messageEl.style.color = "red";
@@ -186,6 +179,36 @@
         link.click();
       });
     }
+    setInterval(async () => {
+  if (!waitingForApproval) return;
+
+  const name = document.getElementById("name").value.trim();
+  if (!name) return;
+
+  const res = await fetch("/api/pelatais");
+  const data = await res.json();
+
+  const user = data.find(
+    p => p.name === name && p.status === "approved"
+  );
+
+  if (user) {
+    // Γέμισμα κάρτας
+    document.getElementById("c-name").innerText = user.name;
+    document.getElementById("c-start").innerText = user.startDate;
+    document.getElementById("c-end").innerText = user.endDate;
+
+    document.getElementById("card").style.display = "block";
+    document.getElementById("download-btn").style.display = "inline-block";
+
+    document.getElementById("message").innerText = "Η συνδρομή εγκρίθηκε!";
+    document.getElementById("message").style.color = "green";
+
+    waitingForApproval = false;
+  }
+}, 3000);
+
   </script>
 </body>
 </html>
+

@@ -1,10 +1,19 @@
 from flask import Flask, request, jsonify, send_from_directory
 import json, os
 from datetime import datetime, timedelta
+import smtplib
+from email.message import EmailMessage
+
 
 app = Flask(__name__, static_folder="static")
 
 DATA_FILE = "pelatais.json"
+
+
+# ----------- Ρυθμίσεις Email -----------
+EMAIL_SENDER = os.environ.get("ilios.emmanouil@gmail.com")
+EMAIL_PASSWORD = os.environ.get("khge ykcq dsau nuuz")
+EMAIL_RECEIVER = os.environ.get("hlios.vh@gmail.com")
 
 # ---------------- Βοηθητικές Συναρτήσεις ----------------
 def load_data():
@@ -19,6 +28,27 @@ def load_data():
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+def send_email(pelatis):
+    msg = EmailMessage()
+    msg["Subject"] = "Νέα Εγγραφή Πελάτη Γυμναστηρίου"
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = EMAIL_RECEIVER
+
+    msg.set_content(
+        f"Νέα εγγραφή πελάτη:\n\n"
+        f"Ονοματεπώνυμο: {pelatis['name']}\n"
+        f"Ημερομηνία Έναρξης: {pelatis['startDate']}\n"
+        f"Ημερομηνία Λήξης: {pelatis['endDate']}\n"
+    )
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+    except Exception as e:
+        print("Σφάλμα αποστολής email:", e)
+
 
 # ---------------- API Endpoints ----------------
 
@@ -46,6 +76,7 @@ def add_pelatis():
     pelates = load_data()
     pelates.append(pelatis)
     save_data(pelates)
+    send_email(pelatis)
 
     return jsonify({"message": "Ο πελάτης προστέθηκε!", "pelatis": pelatis})
 
@@ -94,4 +125,5 @@ def listapelaton_page():
 # ---------------- Εκκίνηση για Render ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 

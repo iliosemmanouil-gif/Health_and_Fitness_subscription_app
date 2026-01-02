@@ -13,7 +13,7 @@ DATA_FILE = "pelatais.json"
 # ----------- Ρυθμίσεις Email -----------
 EMAIL_SENDER = os.environ.get("ilios.emmanouil@gmail.com")
 EMAIL_PASSWORD = os.environ.get("khge ykcq dsau nuuz")
-EMAIL_RECEIVER = os.environ.get("hlios.vh@gmail.com")
+EMAIL_RECEIVER = os.environ.get("ilios.emmanouil@gmail.com")
 
 # ---------------- Βοηθητικές Συναρτήσεις ----------------
 def load_data():
@@ -125,5 +125,6 @@ def listapelaton_page():
 # ---------------- Εκκίνηση για Render ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
